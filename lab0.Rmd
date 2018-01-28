@@ -1,0 +1,169 @@
+---
+output: html_document
+---
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+<style> 
+  .right{ 
+    float: right; 
+  } 
+  
+  img{ 
+    display:block; 
+    margin: 0 auto;
+  } 
+  
+  pre{ 
+    overflow-x: hidden; 
+    overflow-y: hidden; 
+  } 
+  
+  body{ 
+    margin-top: 20px; 
+    margin-bottom: 20px; 
+  } 
+  
+  .col-left{ 
+    float: left; 
+    width: 50%; 
+  } 
+  
+  .col-right{ 
+    float: right; 
+    width: 50%; 
+  } 
+  
+  p{
+    margin-bottom: 0px;
+  }
+</style>
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+source('http://www.openintro.org/stat/data/arbuthnot.R')
+source('http://www.openintro.org/stat/data/present.R')
+```
+
+<div class='jumbotron'>
+  <h2 class='display-3 text-uppercase'>Lab 0 - Introduction to R and RStudio</h2>
+  <h4 class='right text-uppercase'>By Brian Weinfeld</h4>
+  <div class='clearfix'></div>
+  <h5 class='right text-uppercase'>January 27, 2018</h5>
+</div>
+
+<div class='page-header text-uppercase'>
+  <h3>Exersises</h3>
+</div>
+
+
+<div class='well'>
+  #1: What command would you use to extract just the counts of girls baptized? Try it!
+</div>
+
+```{r}
+arbuthnot$girls
+```
+
+<div class='well'>
+  <p>#2: Is there an apparent trend in the number of girls baptized over the years? How would you describe it?</p>
+</div>
+
+```{r}
+plot(arbuthnot$year, arbuthnot$girls, type='l')
+```
+
+<div class='alert alert-info'>
+  <p>There is a consistent upwards trend in the number of girls baptized over the given time frame aside form a decade long drop from appoximately 1650 to 1660. One would speculate that some event or series of events occurred during this time to artificially drop the number of girls being baptized.</p>
+</div>
+
+<div class='well'>
+  <p>#3: Now, make a plot of the proportion of boys over time. What do you see? Tip: If you use the up and down arrow keys, you can scroll through your previous commands, your so-called command history. You can also access it by clicking on the history tab in the upper right panel. This will save you a lot of typing in the future.</p>
+</div>
+
+```{r}
+plot(arbuthnot$year, arbuthnot$boys/(arbuthnot$boys+arbuthnot$girls), type = 'l')
+```
+
+<div class='alert alert-info'>
+  <p>The proportion of boys born during the measured time frame varies from year to year but is consistently just around 0.51 and never below 0.5</p>
+</div>
+
+<div class='page-header text-uppercase'>
+  <h3>On Your Own</h3>
+</div>
+
+<div class='well'>
+  <p>#1: What years are included in this data set? What are the dimensions of the data frame and what are the variable or column names?</p>
+</div>
+
+```{r}
+max(present$year)
+min(present$year)
+dim(present)
+names(present)
+```
+
+<div class='alert alert-info'>
+  <p>The years included in this data set range from 1940 to 2002 inclusive.</p>
+  <p>The dimensions of the data frame are 63 observations of 3 variables.</p>
+  <p>The column names are 'year', 'boys', and 'girls'</p>
+</div>
+
+<div class='well'>
+  <p>#2: How do these counts compare to Arbuthnot's? Are they on a similar scale?</p>
+</div>
+
+```{r}
+summary(present$boys + present$girls)
+summary(arbuthnot$boys + arbuthnot$girls)
+```
+
+<div class='alert alert-info'>
+  <p>Comparing the summary statistics show that the present data is many orders of magnitude larger than the arbuthnot data.</p>
+</div>
+
+<div class='well'>
+  <p>#3: Make a plot that displays the boy-to-girl ratio for every year in the data set. What do you see? Does Arbuthnot's observation about boys being born in greater proportion than girls hold up in the U.S.? Include the plot in your response.</p>
+</div>
+
+```{r}
+plot(present$year, present$boys / (present$boys + present$girls), type='l')
+plot(seq(1,length(arbuthnot[,1])), arbuthnot$boys/(arbuthnot$boys+arbuthnot$girls), type='l', col='blue')
+lines(seq(1,length(present[,1])), present$boys / (present$boys + present$girls), type='l', col='red')
+```
+
+<div class='alert alert-info'>
+  <p>Yes, all the years have a greater proportion of boys than girls however the present data shows a significantly more consistent proportion when compared the relative volatility of the arbuthnot data.</p>
+</div>
+
+<div class='well'>
+  <p>#4: In what year did we see the most total number of births in the U.S.? You can refer to the help files or the R reference card http://cran.r-project.org/doc/contrib/Short-refcard.pdf to find helpful commands.</p>
+</div>
+
+```{r}
+present[present$boys + present$girls == max(present$boys + present$girls),]$year
+```
+
+<div class='alert alert-info'>
+  <p>The greatest number of births occurred in 1961.</p>
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

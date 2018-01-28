@@ -1,0 +1,288 @@
+---
+output: html_document
+---
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+<style> 
+  .right{ 
+    float: right; 
+  } 
+  
+  img{ 
+    display:block; 
+    margin: 0 auto;
+  } 
+  
+  pre{ 
+    overflow-x: hidden; 
+    overflow-y: hidden; 
+  } 
+  
+  body{ 
+    margin-top: 20px; 
+    margin-bottom: 20px; 
+  } 
+  
+  .col-left{ 
+    float: left; 
+    width: 50%; 
+  } 
+  
+  .col-right{ 
+    float: right; 
+    width: 50%; 
+  } 
+  
+  p{
+    margin-bottom: 0px;
+  }
+</style>
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+source("http://www.openintro.org/stat/data/cdc.R")
+```
+
+<div class='jumbotron'>
+  <h2 class='display-3 text-uppercase'>Lab 1 - Introduction to Data</h2>
+  <h4 class='right text-uppercase'>By Brian Weinfeld</h4>
+  <div class='clearfix'></div>
+  <h5 class='right text-uppercase'>January 28, 2018</h5>
+</div>
+
+<div class='page-header text-uppercase'>
+  <h3>Exersises</h3>
+</div>
+
+
+<div class='well'>
+  #1: How many cases are there in this data set? How many variables? For each variable, identify its data type (e.g. categorical, discrete).
+</div>
+
+```{r}
+nrow(cdc)
+ncol(cdc)
+lapply(cdc[,], FUN=unique)
+```
+
+<div class='alert alert-info'>
+  <p>There are 20,000 cases (rows) in the data set</p>
+  <p>There are 9 varibles (columns) in the data set</p>
+  <p>Categorial Data: genhlth, hlthplan, smoke100, gender</p>
+  <p>Discrete (Quantitative) Data: height, weight, wtdesire, age</p>
+</div>
+
+<div class='well'>
+  #2: Create a numerical summary for height and age, and compute the interquartile range for each. Compute the relative frequency distribution for gender and exerany. How many males are in the sample? What proportion of the sample reports being in excellent health?
+</div>
+
+```{r}
+sumHeight <- summary(cdc$height)
+sumHeight
+sumHeight['3rd Qu.'] - sumHeight['1st Qu.']
+sumAge <- summary(cdc$age)
+sumAge
+sumAge['3rd Qu.'] - sumAge['1st Qu.']
+
+table(cdc$gender)
+table(cdc$exerany)
+nrow(cdc[cdc$genhlth == 'excellent',])/nrow(cdc)
+```
+
+<div class='alert alert-info'>
+  <p>The interquartile range for height is 6.</p>
+  <p>The interquartile range for age is 26.</p>
+  <p>There are 9569 males in the sample</p>
+  <p>Appoximately 23.285% of the respondidents reported being in excellent health</p>
+</div>
+
+<div class='well'>
+  #3: What does the mosaic plot reveal about smoking habits and gender?
+</div>
+
+```{r}
+mosaicplot(table(cdc$gender, cdc$smoke100))
+```
+
+<div class='alert alert-info'>
+  <p>Women make up slightly more than half of the sample and are less likely to have smoked 100 cigarettes in their lifetime then men.</p>
+</div>
+
+<div class='well'>
+  #4: Create a new object called under23_and_smoke that contains all observations of respondents under the age of 23 that have smoked 100 cigarettes in their lifetime. Write the command you used to create the new object as the answer to this exercise.
+</div>
+
+```{r}
+under23_and_smoke <- subset(cdc, age < 23 & smoke100 == 1)
+```
+
+<div class='well'>
+  #5: What does this box plot show? Pick another categorical variable from the data set and see how it relates to BMI. List the variable you chose, why you might think it would have a relationship to BMI, and indicate what the figure seems to suggest.
+</div>
+
+```{r}
+bmi <- (cdc$weight / cdc$height^2)*703
+boxplot(bmi ~ cdc$exerany)
+```
+
+<div class='alert alert-info'>
+  <p>The boxplot in the notes shows a comparison between BMI and respondents description of their health. It could be helpful in determining if their is a relationship between a respondents weight and whether or not they consider themselves healthy.</p>
+  <p>I plotted BMI against whether the respondant is on an exercise plan. I would anticipate that the BMI of people who exercise would be lower than those who do not but would also have more upper outliers. This may seem paradoxical but it would make sense that people who exercise would broadly be comprised of people concerned about their health and weight along with those who were put on exercise plans by doctors in an attempt to bring their weight down.</p>
+  <p>The figure mostly supports this interpretation. In addition, the plot shows fewer exercising respondents with severly low BMI as well. This supports the idea that people who exercise are perhaps more conscious of their weight (both high and low)</p>
+</div>
+
+<div class='page-header text-uppercase'>
+  <h3>On Your Own</h3>
+</div>
+
+<div class='well'>
+  #1: Make a scatterplot of weight versus desired weight. Describe the relationship between these two variables.
+</div>
+
+```{r}
+plot(cdc$weight, cdc$wtdesire, col=ifelse(cdc$weight > 230 & cdc$wtdesire > cdc$weight,'green','black'))
+lines(1:700, 1:700, col='red', type='l')
+```
+
+<div class='alert alert-info'>
+  <p>There is a strong positive correlation between the two variables. That is, people appear to base the weight they desire off of their current weight. This makes sense as it is common to hear people make statements such as, "I'd like to drop 20 pounds."</p>
+  <p>The red line indicates equal weight and wtdesire and thus all people below the line would like to lose weight, while all people above would like to gain weight. It matches expectations that the number of people that would like to gain weight would depreciate as weight grows. Very few people  above 230 pounds wish to gain weight (marked in green).</p>
+</div>
+
+<div class='well'>
+  #2: Let's consider a new variable: the difference between desired weight (wtdesire) and current weight (weight). Create this new variable by subtracting the two columns in the data frame and assigning them to a new object called wdiff.
+</div>
+
+```{r}
+cdc$wtdiff = cdc$wtdesire - cdc$weight
+```
+
+<div class='well'>
+  #3: What type of data is wdiff? If an observation wdiff is 0, what does this mean about the person's weight and desired weight. What if  wdiff is positive or negative?
+</div>
+
+```{r}
+typeof(cdc$wtdiff[0])
+```
+
+<div class='alert alert-info'>
+  <p>wdiff is an integer and is discrete (quantitative) data.</p>
+  <p>If wdiff is 0 that means the person is already at their desired weight. If the number is negative, this represents the amount of weight the person wishes to lose and if it is positive, that represents the weight the person wishes to gain.</p>
+</div>
+
+<div class='well'>
+  #4: Describe the distribution of wdiff in terms of its center, shape, and spread, including any plots you use. What does this tell us about how people feel about their current weight?
+</div>
+
+```{r}
+#Normal curve code thanks to Peter Dalgaard
+his <- hist(cdc$wtdiff, breaks=200)
+xfit <- seq(min(cdc$wtdiff), max(cdc$wtdiff))
+yfit <- dnorm(xfit, mean=mean(cdc$wtdiff), sd=sd(cdc$wtdiff))
+yfit <- yfit*diff(his$mids[1:2]*length(cdc$wtdiff))
+lines(xfit, yfit, col='blue')
+summary(cdc$wtdiff)
+```
+
+<div class='alert alert-info'>
+  <p>Upon initial observation the data is centered and heavily weighted just below 0. This would indicate that most people want to "lose a couple of pounds". The mean and median are closely located at -10 and -14.59 again backing up that sentinment of "wanting to lose a few pounds".</p>
+  <p>The data appears slight skewed towards losing weight. This is more easily noticable with the normal curve added to the historgram. </p>
+  <p>However the data is hard to process due to a number of extreme outliers. A boxplot supports the idea of a number of extreme outliers</p>
+</div>
+
+```{r}
+boxplot(cdc$wtdiff)
+```
+
+<div class='alert alert-info'>
+  <p>I created a data set with these outliers removed</p>
+</div>
+
+```{r}
+sumDiff <- summary(cdc$wtdiff)
+iqrDiff <- sumDiff['3rd Qu.'] - sumDiff['1st Qu.']
+meanDiff <- sumDiff['Mean']
+cdcNoOutliers <- cdc[cdc$wtdiff > meanDiff-1.5*iqrDiff & cdc$wtdiff < meanDiff+1.5*iqrDiff,]
+boxplot(cdcNoOutliers$wtdiff)
+
+his <- hist(cdcNoOutliers$wtdiff, breaks=20)
+xfit <- seq(min(cdcNoOutliers$wtdiff), max(cdcNoOutliers$wtdiff))
+yfit <- dnorm(xfit, mean=mean(cdcNoOutliers$wtdiff), sd=sd(cdcNoOutliers$wtdiff))
+yfit <- yfit*diff(his$mids[1:2]*length(cdcNoOutliers$wtdiff))
+lines(xfit, yfit, col='blue')
+```
+
+<div class='alert alert-info'>
+  <p>The histogram with the outliers removes shows a much clearer picture. Most people indicate wanting to lose a few pounds with the data being more heavily skewed towards losing weight.</p>
+</div>
+
+<div class='well'>
+  #5: Using numerical summaries and a side-by-side box plot, determine if men tend to view their weight differently than women.
+</div>
+
+```{r}
+summary(cdcNoOutliers[cdcNoOutliers$gender == 'm',]$wtdiff)
+summary(cdcNoOutliers[cdcNoOutliers$gender == 'f',]$wtdiff)
+boxplot(cdcNoOutliers$wtdiff ~ cdcNoOutliers$gender)
+```
+
+<div class='alert alert-info'>
+  <p>Comparing the mean and median from the summary data along with side-by-side box plots supports the notion that women tend to want to lose more weight than men. Interestingly both genders had an equal proportion ($\frac{1}{4}$) who wanted to gain weight and the distribution of desired gain is also equal between 0 and 10 pounds.</p>
+  <p>This might indicate that men are in general more happy with their weight or it may simply mean that men are less likely to report that they are unhappy with their weight.</p>
+</div>
+
+<div class='well'>
+  #6: Now it's time to get creative. Find the mean and standard deviation of weight and determine what proportion of the weights are within one standard deviation of the mean.
+</div>
+
+```{r}
+#Code modified from r-graph-gallery.com number 162
+meanWeight <- mean(cdc$weight)
+sdWeight <- sd(cdc$weight)
+plot(density(cdc$weight))
+lowerBound <- meanWeight-sdWeight
+upperBound <- meanWeight+sdWeight
+abline(v=lowerBound, col='red')
+abline(v=upperBound, col='red')
+densityData <- density(cdc$weight, from=lowerBound, to=upperBound)
+polygon(c(lowerBound,densityData$x,upperBound), c(0,densityData$y,0), col='red')
+abline(v=meanWeight)
+
+nrow(cdc[cdc$weight >= lowerBound & cdc$weight <= upperBound,])/nrow(cdc)
+```
+
+<div class='alert alert-info'>
+  <p>The red area shows the portion of the sample that is within 1 standard deviation of the mean weight.</p>
+  <p>Approximately 70.76% of the sample falls within 1 standard deviation of the mean.</p>
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
