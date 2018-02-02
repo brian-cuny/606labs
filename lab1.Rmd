@@ -39,6 +39,7 @@ output: html_document
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
+library(ggplot2)
 source("http://www.openintro.org/stat/data/cdc.R")
 ```
 
@@ -50,7 +51,7 @@ source("http://www.openintro.org/stat/data/cdc.R")
 </div>
 
 <div class='page-header text-uppercase'>
-  <h3>Exersises</h3>
+  <h3>Exercises</h3>
 </div>
 
 
@@ -76,13 +77,10 @@ lapply(cdc[,], FUN=unique)
 </div>
 
 ```{r}
-sumHeight <- summary(cdc$height)
-sumHeight
-sumHeight['3rd Qu.'] - sumHeight['1st Qu.']
-sumAge <- summary(cdc$age)
-sumAge
-sumAge['3rd Qu.'] - sumAge['1st Qu.']
-
+summary(cdc$height)
+IQR(cdc$height)
+summary(cdc$age)
+IQR(cdc$age)
 table(cdc$gender)
 table(cdc$exerany)
 nrow(cdc[cdc$genhlth == 'excellent',])/nrow(cdc)
@@ -100,7 +98,7 @@ nrow(cdc[cdc$genhlth == 'excellent',])/nrow(cdc)
 </div>
 
 ```{r}
-mosaicplot(table(cdc$gender, cdc$smoke100))
+mosaicplot(table(cdc$gender, cdc$smoke100), shade=TRUE, main='Relationship between gender and smoking habits', xlab = 'Gender', ylab='Smoking Habit')
 ```
 
 <div class='alert alert-info'>
@@ -121,11 +119,12 @@ under23_and_smoke <- subset(cdc, age < 23 & smoke100 == 1)
 
 ```{r}
 bmi <- (cdc$weight / cdc$height^2)*703
-boxplot(bmi ~ cdc$exerany)
+level_data <- factor(x=cdc$exerany, levels=0:1, labels = c('No Exercise Plan', 'Exercise Plan'))
+ggplot(cdc, mapping=aes(x=level_data, y=bmi)) + geom_boxplot() + xlab('Group') + ylab('BMI') + ggtitle('Comparison of BMI between Different Exercise Groups')
 ```
 
 <div class='alert alert-info'>
-  <p>The boxplot in the notes shows a comparison between BMI and respondents description of their health. It could be helpful in determining if their is a relationship between a respondents weight and whether or not they consider themselves healthy.</p>
+  <p>The boxplot in the notes shows a comparison between BMI and respondents description of their health. It could be helpful in determining if there is a relationship between a respondents weight and whether or not they consider themselves healthy.</p>
   <p>I plotted BMI against whether the respondant is on an exercise plan. I would anticipate that the BMI of people who exercise would be lower than those who do not but would also have more upper outliers. This may seem paradoxical but it would make sense that people who exercise would broadly be comprised of people concerned about their health and weight along with those who were put on exercise plans by doctors in an attempt to bring their weight down.</p>
   <p>The figure mostly supports this interpretation. In addition, the plot shows fewer exercising respondents with severly low BMI as well. This supports the idea that people who exercise are perhaps more conscious of their weight (both high and low)</p>
 </div>
@@ -139,8 +138,7 @@ boxplot(bmi ~ cdc$exerany)
 </div>
 
 ```{r}
-plot(cdc$weight, cdc$wtdesire, col=ifelse(cdc$weight > 230 & cdc$wtdesire > cdc$weight,'green','black'))
-lines(1:700, 1:700, col='red', type='l')
+ggplot(cdc, aes(x=weight, y=wtdesire)) + geom_point() + geom_abline(slope=1,intercept=0, color='red') + geom_point(data=cdc[cdc$weight>230 & cdc$wtdesire>cdc$weight,], color='green') + ggtitle('Current Weight vs. Desired Weight') + xlab('Weight') + ylab('Desired Weight')
 ```
 
 <div class='alert alert-info'>
@@ -153,7 +151,7 @@ lines(1:700, 1:700, col='red', type='l')
 </div>
 
 ```{r}
-cdc$wtdiff = cdc$wtdesire - cdc$weight
+cdc$wtdiff <- cdc$wtdesire - cdc$weight
 ```
 
 <div class='well'>
@@ -165,7 +163,7 @@ typeof(cdc$wtdiff[0])
 ```
 
 <div class='alert alert-info'>
-  <p>wdiff is an integer and is discrete (quantitative) data.</p>
+  <p>wdiff is an integer and is quantitative data.</p>
   <p>If wdiff is 0 that means the person is already at their desired weight. If the number is negative, this represents the amount of weight the person wishes to lose and if it is positive, that represents the weight the person wishes to gain.</p>
 </div>
 
@@ -174,12 +172,7 @@ typeof(cdc$wtdiff[0])
 </div>
 
 ```{r}
-#Normal curve code thanks to Peter Dalgaard
-his <- hist(cdc$wtdiff, breaks=200)
-xfit <- seq(min(cdc$wtdiff), max(cdc$wtdiff))
-yfit <- dnorm(xfit, mean=mean(cdc$wtdiff), sd=sd(cdc$wtdiff))
-yfit <- yfit*diff(his$mids[1:2]*length(cdc$wtdiff))
-lines(xfit, yfit, col='blue')
+ggplot(cdc, aes(x=wtdiff)) + geom_histogram(aes(y=..count../sum(..count..)),bins = 200) + stat_function(fun=dnorm, color='red', args=list(mean=mean(cdc$wtdiff), sd=sd(cdc$wtdiff)), show.legend=FALSE) + ggtitle('Distribution of Desired Weight Change') + xlab('Weight Difference') + ylab('Relative Frequency')
 summary(cdc$wtdiff)
 ```
 
@@ -198,21 +191,23 @@ boxplot(cdc$wtdiff)
 </div>
 
 ```{r}
-sumDiff <- summary(cdc$wtdiff)
-iqrDiff <- sumDiff['3rd Qu.'] - sumDiff['1st Qu.']
-meanDiff <- sumDiff['Mean']
+meanDiff <- mean(cdc$wtdiff)
+iqrDiff <- IQR(cdc$wtdiff)
+cdc$bmi <- bmi
+cdc$cat <- ''
+cdc[cdc$bmi < 18.5,]$cat <- 'Under'
+cdc[cdc$bmi >= 18.5 & cdc$bmi < 24.9,]$cat <- 'Normal'
+cdc[cdc$bmi >=24.9 & cdc$bmi < 29.9,]$cat <- 'Over'
+cdc[cdc$bmi >= 29.9,]$cat <- 'Obese'
 cdcNoOutliers <- cdc[cdc$wtdiff > meanDiff-1.5*iqrDiff & cdc$wtdiff < meanDiff+1.5*iqrDiff,]
-boxplot(cdcNoOutliers$wtdiff)
 
-his <- hist(cdcNoOutliers$wtdiff, breaks=20)
-xfit <- seq(min(cdcNoOutliers$wtdiff), max(cdcNoOutliers$wtdiff))
-yfit <- dnorm(xfit, mean=mean(cdcNoOutliers$wtdiff), sd=sd(cdcNoOutliers$wtdiff))
-yfit <- yfit*diff(his$mids[1:2]*length(cdcNoOutliers$wtdiff))
-lines(xfit, yfit, col='blue')
+boxplot(cdcNoOutliers$wtdiff)
+ggplot(cdcNoOutliers, aes(x=wtdiff)) + geom_histogram(aes(y=..count../sum(..count..), fill=cat),bins = 15) + ggtitle('Distribution of Desired Weight Change') + xlab('Weight Difference') + ylab('Relative Frequency') + labs(fill='Legend')
+
 ```
 
 <div class='alert alert-info'>
-  <p>The histogram with the outliers removes shows a much clearer picture. Most people indicate wanting to lose a few pounds with the data being more heavily skewed towards losing weight.</p>
+  <p>The histogram with the outliers removes shows a much clearer picture. Most people indicate wanting to lose a few pounds with the data being more heavily skewed towards losing weight. I grouped each person by their BMI category and added this information to the histogram. This information shows clear trends based on BMI category. Underweight people seem to acknolwedge they should gain weight, obese people clearly wish to lose the most weight and normal weight people are the most likely to be happy with their current weight.</p>
 </div>
 
 <div class='well'>
@@ -222,12 +217,12 @@ lines(xfit, yfit, col='blue')
 ```{r}
 summary(cdcNoOutliers[cdcNoOutliers$gender == 'm',]$wtdiff)
 summary(cdcNoOutliers[cdcNoOutliers$gender == 'f',]$wtdiff)
-boxplot(cdcNoOutliers$wtdiff ~ cdcNoOutliers$gender)
+ggplot(cdcNoOutliers, mapping=aes(x=gender, y=wtdiff)) + geom_boxplot() + xlab('Gender') + ylab('Weight Diff') + ggtitle('Comparison of Ideal Weight Change Between Men and Women')
 ```
 
 <div class='alert alert-info'>
   <p>Comparing the mean and median from the summary data along with side-by-side box plots supports the notion that women tend to want to lose more weight than men. Interestingly both genders had an equal proportion ($\frac{1}{4}$) who wanted to gain weight and the distribution of desired gain is also equal between 0 and 10 pounds.</p>
-  <p>This might indicate that men are in general more happy with their weight or it may simply mean that men are less likely to report that they are unhappy with their weight.</p>
+  <p>This might indicate that men are in general more happy with their weight or it may simply mean that men are less likely to report that they are unhappy with their weight or that women may feel under more pressure to lose weight.</p>
 </div>
 
 <div class='well'>
@@ -238,7 +233,7 @@ boxplot(cdcNoOutliers$wtdiff ~ cdcNoOutliers$gender)
 #Code modified from r-graph-gallery.com number 162
 meanWeight <- mean(cdc$weight)
 sdWeight <- sd(cdc$weight)
-plot(density(cdc$weight))
+plot(density(cdc$weight), main='Density Distribution of Weights')
 lowerBound <- meanWeight-sdWeight
 upperBound <- meanWeight+sdWeight
 abline(v=lowerBound, col='red')
