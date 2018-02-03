@@ -80,11 +80,17 @@ boxplot(cdc$wtdiff)
 meanDiff <- mean(cdc$wtdiff)
 iqrDiff <- IQR(cdc$wtdiff)
 cdc$bmi <- bmi
-cdc$cat <- ''
-cdc[cdc$bmi < 18.5,]$cat <- 'Under'
-cdc[cdc$bmi >= 18.5 & cdc$bmi < 24.9,]$cat <- 'Normal'
-cdc[cdc$bmi >=24.9 & cdc$bmi < 29.9,]$cat <- 'Over'
-cdc[cdc$bmi >= 29.9,]$cat <- 'Obese'
+
+convert_bmi <- function(bmi){
+  sapply(bmi, function(bmi){
+    cuts <- c(-Inf, 18.5, 24.9, 29.9, Inf)
+    labs <- c('Under', 'Normal', 'Over', 'Obese')
+    return(labs[findInterval(bmi, cuts)])
+  })
+}
+
+cdc <- mutate(cdc, cat=convert_bmi(bmi))
+
 cdcNoOutliers <- cdc[cdc$wtdiff > meanDiff-1.5*iqrDiff & cdc$wtdiff < meanDiff+1.5*iqrDiff,]
 
 boxplot(cdcNoOutliers$wtdiff)

@@ -385,11 +385,15 @@ I created a data set with these outliers removed
 <pre class="r"><code>meanDiff &lt;- mean(cdc$wtdiff)
 iqrDiff &lt;- IQR(cdc$wtdiff)
 cdc$bmi &lt;- bmi
-cdc$cat &lt;- ''
-cdc[cdc$bmi &lt; 18.5,]$cat &lt;- 'Under'
-cdc[cdc$bmi &gt;= 18.5 &amp; cdc$bmi &lt; 24.9,]$cat &lt;- 'Normal'
-cdc[cdc$bmi &gt;=24.9 &amp; cdc$bmi &lt; 29.9,]$cat &lt;- 'Over'
-cdc[cdc$bmi &gt;= 29.9,]$cat &lt;- 'Obese'
+#Components adapted from Stackoverflow
+convert_bmi &lt;- function(bmi){
+  sapply(bmi, function(bmi){
+    cuts &lt;- c(-Inf, 18.5, 24.9, 29.9, Inf)
+    labs &lt;- c('Under', 'Normal', 'Over', 'Obese')
+    return(labs[findInterval(bmi, cuts)])
+  })
+}
+cdc &lt;- mutate(cdc, cat=convert_bmi(bmi))
 cdcNoOutliers &lt;- cdc[cdc$wtdiff &gt; meanDiff-1.5*iqrDiff &amp; cdc$wtdiff &lt; meanDiff+1.5*iqrDiff,]
 
 boxplot(cdcNoOutliers$wtdiff)</code></pre>
