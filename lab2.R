@@ -31,7 +31,7 @@ library(tidyverse)
 library(reshape2)
 repeated_simulations <- replicate(100, calc_streak(sample(outcomes,size=133, replace = TRUE, prob=c(0.45, 0.55))))
 data_simulations <- data.frame(mean=sapply(repeated_simulations, mean), sd=sapply(repeated_simulations, sd), max=sapply(repeated_simulations, max))
-ggplot(melt(data_simulations), aes(x=value)) + geom_histogram(bins=10) + facet_wrap(~variable, scales='free_x') + labs(title='Mean, Standard Deviation and Max Streaks of 100 Simulations') + xlab('Value') + ylab('Count')
+ggplot(melt(data_simulations), aes(x=value)) + geom_histogram(bins=8) + facet_wrap(~variable, scales='free_x') + labs(title='Mean, Standard Deviation and Max Streaks of 100 Simulations') + xlab('Value') + ylab('Count')
 
 
 #2
@@ -43,18 +43,26 @@ library(reshape)
 table(kobe_streak)
 table(independent_streak)
 
+
+tabled_info <- data.frame(sapply(repeated_simulations, table) %>%
+  lapply(`length<-`, max(lengths(tabled_info))))
+tabled_info[is.na(tabled_info)] <- 0
+tabled_info <- sapply(tabled_info, as.numeric) %>%
+  apply(1, mean)
+
+
 #Adapted form Stackoverflow
 tabled_info <- sapply(repeated_simulations, table)
 tabled_info <- data.frame(lapply(tabled_info, `length<-`, max(lengths(tabled_info))))
 tabled_info[is.na(tabled_info)] <- 0
-tabled_info <- sapply(tabled_info, as.numeric)
-tabled_info <- apply(tabled_info, 1, median)
+tabled_info <- sapply(tabled_info, as.numeric) %>%
+  apply(1, mean)
 
-to_plot <- data.frame(0:7, tabled_info, table(kobe_streak)[seq(tabled_info)], table(independent_streak)[seq(tabled_info)])
-to_plot['kobe_streak'] <- NULL
-to_plot['independent_streak'] <- NULL
-names(to_plot) = c('Streak', 'Repated', 'Kobe', 'Simulated')
-ggplot(melt(to_plot, id.var = 'Streak'), aes(x=Streak, y=value, fill=variable)) + geom_bar(stat='identity', position='dodge') + labs(title='Streak Comparison between Kobe Bryant and Simulations')
+to_plot <- data.frame(0:7, tabled_info, table(kobe_streak)[seq(tabled_info)], table(independent_streak)[seq(tabled_info)]) %>%
+  subset(select=c(1,2,4,6))
+to_plot[is.na(to_plot)] <- 0
+names(to_plot) <- c('Streak', 'Repated', 'Kobe', 'Simulated')
+ggplot(melt(to_plot, id.var = 'Streak'), aes(x=Streak, y=value, fill=variable)) + geom_bar(stat='identity', position='dodge') + labs(title='Streak Comparison between Kobe Bryant and Simulations') + scale_x_continuous(labels=as.character(to_plot$Streak), breaks=to_plot$Streak)
 
 
 summary(kobe_streak)
