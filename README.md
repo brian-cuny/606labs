@@ -10,3 +10,5 @@ Lab 2 - Probability
 Lab 3 - Random Variable Distributions
 
 Lab 4 - Sampling Distributions
+
+Lab 4B - Confidence Intervals
