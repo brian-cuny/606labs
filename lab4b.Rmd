@@ -1,0 +1,140 @@
+---
+output: html_document
+---
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+<link rel="stylesheet" href="./custom.css">
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, message=FALSE, warning=FALSE)
+download.file("http://www.openintro.org/stat/data/ames.RData", destfile = "ames.RData")
+load("ames.RData")
+```
+
+<div class='jumbotron'>
+  <h2 class='display-3 text-uppercase'>Lab 4B - Confidence Intervals</h2>
+  <h4 class='right text-uppercase'>By Brian Weinfeld</h4>
+  <div class='clearfix'></div>
+  <h5 class='right text-uppercase'>March 6th, 2018</h5>
+</div>
+
+<div class='page-header text-uppercase'>
+  <h3>Exercises</h3>
+</div>
+
+<div class='well'>
+  #1: Describe the distribution of your sample. What would you say is the "typical" size within your sample? Also state precisely what you interpreted "typical" to mean.
+</div>
+
+```{r q1}
+set.seed(10000)
+population <- ames$Gr.Liv.Area
+samp <- sample(population, 60)
+summary(samp)
+hist(samp)
+```
+
+<div class='alert alert-info'>
+The average house is about 1519 square feet. The distribution is skew right. The typical house is between 1118 and 1732 square feet. Typical in thise case is the IQR or the middle 50% of homes by size.
+</div>
+
+<div class='well'>
+  #2: Would you expect another student's distribution to be identical to yours? Would you expect it to be similar? Why or why not?
+</div>
+
+<div class='alert alert-info'>
+I would not expect it to be identical. There are many different samples of 60 from a population of nearly 3000. However, I would anticipate that most distributions would be very similar to mine. 60 elements out of a population 3000 is a very good sample size and will accurately represent the data within reason. Thus, the data will be close, but not identical.
+</div>
+
+<div class='well'>
+  #3: For the confidence interval to be valid, the sample mean must be normally distributed and have standard error $\frac{s}{\sqrt{n}}$. What conditions must be met for this to be true? 
+</div>
+
+<div class='alert alert-info'>
+  We must have selected at least 30 elements from a population via a SRS. The minimum of 30 elements is to ensure that the sampling distribution is roughly normal.
+</div>
+
+<div class='well'>
+  #4: What does "95% confidence" mean? If you're not sure, see Section 4.2.2.
+</div>
+
+<div class='alert alert-info'>
+This means that it can be stated with 95% confidence that the true population proportion is in the stated range of given values. It does NOT mean that there is a 95% chance of the population mean being in the given range.
+</div>
+
+<div class='well'>
+  #5: Does your confidence interval capture the true average size of houses in Ames? If you are working on this lab in a classroom, does your neighbor's interval capture this value?
+</div>
+
+```{r}
+sample_mean <- mean(samp)
+se <- sd(samp) / sqrt(60)
+lower <- sample_mean - 1.96*se
+upper <- sample_mean + 1.96*se
+
+c(lower, upper)
+
+mean(population)
+```
+
+<div class='alert alert-info'>
+Yes, the population is captured in the 95% confidence interval that I generated. Given enough students, we would eventually find a confidence interval that does not encompass the true population mean.
+</div>
+
+<div class='well'>
+  #6: Each student in your class should have gotten a slightly different confidence interval. What proportion of those intervals would you expect to capture the true population mean? Why? If you are working in this lab in a classroom, collect data on the intervals created by other students in the class and calculate the proportion of intervals that capture the true population mean.
+</div>
+
+<div class='alert alert-info'>
+I would expect appoximately 95% of the calculated confidence intervals to contained the population mean. The confidence interval is an estimate that tries to encompass 95% of all possible calculated sample means. Thus, we would expect about 95% of the calculated means to contain the population mean.
+</div>
+
+<div class='page-header text-uppercase'>
+  <h3>On Your Own</h3>
+</div>
+
+<div class='well'>
+  #1: Using the following function (which was downloaded with the data set), plot all intervals. What proportion of your confidence intervals include the true population mean? Is this proportion exactly equal to the confidence level? If not, explain why.
+</div>
+
+```{r}
+samp_mean <- rep(NA, 50)
+samp_sd <- rep(NA, 50)
+n <- 60
+
+for(i in 1:50){
+  samp <- sample(population, n)
+  samp_mean[i] <- mean(samp)
+  samp_sd[i] <- sd(samp)
+}
+
+lower_vector <- samp_mean - 1.96*samp_sd / sqrt(n)
+upper_vector <- samp_mean + 1.96*samp_sd / sqrt(n)
+plot_ci(lower_vector, upper_vector, mean(population))
+```
+
+<div class='alert alert-info'>
+48 out of 50 confidence intervals contain the true population mean. 96% of the calculated confidence intervals contain the population mean. This proportion of not exactly the same as the 95% confidence interval. It would be impossible to hit that number exactly as there would be either 96 or 98 % matching. There will always be a small amount of variation between the theoretical value and the expected value. The expected value will trend towards the theoretical value until every possible sample has been generated.
+</div>
+
+<div class='well'>
+  #2: Pick a confidence level of your choosing, provided it is not 95%. What is the appropriate critical value?
+</div>
+
+<div class='alert alert-info'>
+The 99% confidence interval has the critical value of 2.576
+</div>
+
+<div class='well'>
+  #3: Calculate 50 confidence intervals at the confidence level you chose in the previous question. You do not need to obtain new samples, simply calculate new intervals based on the sample means and standard deviations you have already collected. Using the plot_ci function, plot all intervals and calculate the proportion of intervals that include the true population mean. How does this percentage compare to the confidence level selected for the intervals?
+</div>
+
+```{r}
+lower_vector <- samp_mean - 2.576*samp_sd / sqrt(n)
+upper_vector <- samp_mean + 2.576*samp_sd / sqrt(n)
+
+plot_ci(lower_vector, upper_vector, mean(population))
+```
+
+<div class='alert alert-info'>
+49 out of 50 or 98% of the confidence intervals matched the true value. Both values were incredibly close to their theoretical values indicating that a sample of 50 confidence intervals gives a strong indication as to the performance of each interval. 
+</div>
