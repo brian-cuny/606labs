@@ -1,0 +1,154 @@
+---
+output: 
+  html_document:
+    css: 
+     - custom.css
+     - https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css
+---
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, message=FALSE, warning=FALSE)
+download.file("http://www.openintro.org/stat/data/nc.RData", destfile = "nc.RData")
+load("nc.RData")
+set.seed(10000)
+library(tidyverse)
+```
+
+<div class='jumbotron'>
+  <h2 class='display-3 text-uppercase'>Lab 5 - Inference for Numerical Data</h2>
+  <h4 class='right text-uppercase'>By Brian Weinfeld</h4>
+  <div class='clearfix'></div>
+  <h5 class='right text-uppercase'>March 18th, 2018</h5>
+</div>
+
+<div class='page-header text-uppercase'>
+  <h3>Exercises</h3>
+</div>
+
+<div class='well'>
+  #1: What are the cases in this data set? How many cases are there in our sample?
+</div>
+
+<div class='alert alert-info'>
+The cases are babies born in North Caronlina in 2004. There are 1000 observations in this sample.
+</div>
+
+<div class='well'>
+  #2: Make a side-by-side boxplot of habit and weight. What does the plot highlight about the relationship between these two variables?
+</div>
+
+```{r q2}
+boxplot(nc$weight ~ nc$habit)
+```
+
+<div class='alert alert-info'>
+The average baby for both groups appears to be roughly the same however there are many more lower outliers for the nonsmokers compared to the smokers.
+</div>
+
+<div class='well'>
+  #3: Check if the conditions necessary for inference are satisfied. Note that you will need to obtain sample sizes to check  the conditions. You can compute the group size using the same by command above but replacing mean with  length.
+</div>
+  
+```{r q3}
+by(nc$weight, nc$habit, length)
+```
+
+<div class='alert alert-info'>
+It is a safe assumption that the observations are independence and the above code verified that there are more than 30 observations in each group. The conditions for inference are satisfied.
+</div>
+
+<div class='well'>
+  #4: Write the hypotheses for testing if the average weights of babies born to smoking and non-smoking mothers are different.
+</div>
+  
+<div class='alert alert-info'>
+  $H_0:u_{diff}=0$ $H_a:u_{diff}\neq0$
+</div>
+  
+<div class='well'>
+  #5: Change the type argument to "ci" to construct and record a confidence interval for the difference between the weights of babies born to smoking and non-smoking mothers.
+</div>
+  
+```{r q5}
+inference(y = nc$weight, x = nc$habit, est = "mean", type = "ci", null = 0, 
+          alternative = "twosided", method = "theoretical")
+```
+  
+<div class='alert alert-info'>
+The confidence interval is $(0.0534,0.5777)$
+</div>
+  
+<div class='page-header text-uppercase'>
+  <h3>On Your Own</h3>
+</div>
+  
+<div class='well'>
+  #1: Calculate a 95% confidence interval for the average length of pregnancies (weeks) and interpret it in context. Note that since you're doing inference on a single population parameter, there is no explanatory variable, so you can omit the x variable from the function.
+</div>
+
+```{r oyo1}  
+inference(y = nc$weeks, est = "mean", type = "ci", null = 0, 
+          alternative = "twosided", method = "theoretical")
+```
+  
+<div class='alert alert-info'>
+It can be stated with 95% confidence that the average pregancy length of the population is between 38.1528 and 38.5165 weeks.
+</div>
+  
+<div class='well'>
+  #2: Calculate a new confidence interval for the same parameter at the 90% confidence level. You can change the confidence level by adding a new argument to the function: conflevel = 0.90.
+</div>
+
+```{r oyo2}  
+inference(y = nc$weeks, est = "mean", type = "ci", null = 0, 
+          alternative = "twosided", method = "theoretical", conflevel=0.9)
+```
+  
+<div class='alert alert-info'>
+It can be stated with 95% confidence that the average pregancy length of the population is between 38.182 and 38.4873 weeks.
+</div>
+  
+<div class='well'>
+  #3: Conduct a hypothesis test evaluating whether the average weight gained by younger mothers is different than the average weight gained by mature mothers.
+</div>
+
+```{r oyo3}  
+inference(y = nc$gained, x=nc$mature, est = "mean", type = "ht", null = 0, 
+          alternative = "twosided", method = "theoretical")
+```
+  
+<div class='alert alert-info'>
+With a p-value of 0.1686, we fail to reject the null hypothesis. There is no evidence to suggest that there is a difference in weight gain between mature mothers and young mothers.
+</div>
+  
+<div class='well'>
+  #4: Now, a non-inference task: Determine the age cutoff for younger and mature mothers. Use a method of your choice, and explain how your method works.
+</div>
+
+```{r oyo4}
+nc %>%
+  group_by(mature) %>%
+  summarise(min = min(mage), max=max(mage))
+```  
+
+<div class='alert alert-info'>
+The cut off is between 34 and 35. I confirmed this by printing out the min and max ages for each group.
+</div>
+  
+<div class='well'>
+  #5: Pick a pair of numerical and categorical variables and come up with a research question evaluating the relationship between these variables. Formulate the question in a way that it can be answered using a hypothesis test and/or a confidence interval. Answer your question using the inference function, report the statistical results, and also provide an explanation in plain language.
+</div>
+
+```{r oyo5}
+inference(y = nc$visits/ nc$weeks, x=nc$premie, est = "mean", type = "ht", null = 0, 
+          alternative = "twosided", method = "theoretical")
+```  
+
+<div class='alert alert-info'>
+Is there evidence to suggest a difference in the per week visit rate of mothers that give birth to premature babies compared to full term babies?
+
+$H_0:u_{diff}=0$ $H_a:u_{diff}\neq0$
+
+With a p-value of $.6068$, we fail to reject the null hypothesis. There is no evidence to suggest that mother's of premature babies visit the hospital on a different basis than mother's who have full term children.
+</div>
