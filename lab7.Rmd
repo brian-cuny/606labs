@@ -1,0 +1,187 @@
+---
+output: 
+  html_document:
+    css: custom.css
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, message=FALSE, warning=FALSE)
+load('C:\\Users\\Brian\\Desktop\\GradClasses\\Spring18\\606\\Labs\\mlb11.RData')
+library(tidyverse)
+library(magrittr)
+library(knitr)
+```
+
+<div class='jumbotron'>
+  <h2 class='display-3 text-uppercase'>Lab 7 - Introduction to Linear Regression</h2>
+  <h4 class='right text-uppercase'>By Brian Weinfeld</h4>
+  <div class='clearfix'></div>
+  <h5 class='right text-uppercase'>April 2nd, 2018</h5>
+</div>
+
+<div class='page-header text-uppercase'>
+  <h3>Exercises</h3>
+</div>
+
+<div class='well'>
+  #1: What type of plot would you use to display the relationship between runs and one of the other numerical variables? Plot this relationship using the variable at_bats as the predictor. Does the relationship look linear? If you knew a team's at_bats, would you be comfortable using a linear model to predict the number of runs?
+</div>
+
+```{r}
+ggplot(mlb11, aes(at_bats, runs)) +
+  geom_point()
+```
+
+<div class='alert alert-info'>
+A scatterplot would be ideal for this relationship. The data appears to have a small positive correlation. Yes, I would be comfortable using a linear model.
+</div>
+
+<div class='well'>
+  #2: Looking at your plot from the previous exercise, describe the relationship between these two variables. Make sure to discuss the form, direction, and strength of the relationship as well as any unusual observations.
+</div>
+
+<div class='alert alert-info'>
+There appears to be a roughly linear, positive relationship between at bats and runs scored. That is, as the number of at bats increases so does the number of runs scored.
+</div>
+
+<div class='well'>
+  #3: Using plot_ss, choose a line that does a good job of minimizing the sum of squares. Run the function several times. What was the smallest sum of squares that you got? How does it compare to your neighbors?
+</div>
+
+<div class='alert alert-info'>
+The smallest sum of squares I got was 126766.8 the result of the line $\hat{y}=0.5084\times x-2111.5071$
+</div>
+
+<div class='well'>
+  #4: Fit a new model that uses homeruns to predict runs. Using the estimates from the R output, write the equation of the regression line. What does the slope tell us in the context of the relationship between success of a team and its home runs?
+</div>
+
+```{r}
+lm(runs ~ homeruns, data=mlb11) %>%
+  summary()
+```
+
+<div class='alert alert-info'>
+$\widehat{runs} = 1.8345\times homeruns+415.2389$ There is a positive relationship between runs scored and homeruns hit. As the number of homeruns hit increases, so does the number of runs scored. The slope of 1.8 indicates that, on average, each homerun adds nearly 2 to the total number of runs scored.
+</div>
+
+<div class='well'>
+  #5: If a team manager saw the least squares regression line and not the actual data, how many runs would he or she predict for a team with 5,578 at-bats? Is this an overestimate or an underestimate, and by how much? In other words, what is the residual for this prediction?
+</div>
+
+```{r}
+plot(mlb11$runs ~ mlb11$at_bats)
+abline(lm(runs ~ at_bats, data = mlb11))
+```
+
+<div class='alert alert-info'>
+$\widehat{runs}=-2789.2429+.6305\times 5578=727.6861$ The residual for this prediction is 0. The prediction is based on the least-squares line and thus sits right on it. We would need to know the actual number of runs scored to see how this differs from the predicted value. The closest actual point, 5579 at bats predicts 713 runs. Thus 5578's prediction is an overestimate.
+</div>
+
+<div class='well'>
+  #6: Is there any apparent pattern in the residuals plot? What does this indicate about the linearity of the relationship between runs and at-bats?
+</div>
+
+<div class='alert alert-info'>
+There is no apparently pattern in the residuals plot. This indicates that the relationship can be modeled as linear.
+</div>
+
+<div class='well'>
+  #7: Based on the histogram and the normal probability plot, does the nearly normal residuals condition appear to be met?
+</div>
+
+<div class='alert alert-info'>
+ Yes, the nearly normal residuals condition appears to be roughly met.
+</div>
+
+<div class='well'>
+  #8: Based on the plot in (1), does the constant variability condition appear to be met?
+</div>
+
+<div class='alert alert-info'>
+Yes, the variability appears to be roughly constant.
+</div>
+
+<div class='page-header text-uppercase'>
+  <h3>On Your Own</h3>
+</div>
+
+<div class='well'>
+  #1: Choose another traditional variable from mlb11 that you think might be a good predictor of runs. Produce a scatterplot of the two variables and fit a linear model. At a glance, does there seem to be a linear relationship?
+</div>
+
+```{r}
+plot(mlb11$runs ~ mlb11$wins)
+abline(lm(runs ~ wins, data = mlb11))
+```
+
+<div class='alert alert-info'>
+I plotted runs against wins. Yes, from a glance there appears to be a positive, linear relationship.
+</div>
+
+<div class='well'>
+  #2: How does this relationship compare to the relationship between runs and at_bats? Use the R2 values from the two model summaries to compare. Does your variable seem to predict runs better than at_bats? How can you tell?
+</div>
+
+```{r}
+lm(runs ~ wins, data = mlb11) %>%
+  summary()
+```
+
+<div class='alert alert-info'>
+The $R^2$ for runs ~ wins is 0.3381 while the $R^2$ for runs ~ at_bats is 0.3505. The variable at_bats does a better job of predicting total runs than wins does do the fact that it has a stronger $R^2$.
+</div>
+
+<div class='well'>
+  #3: Now that you can summarize the linear relationship between two variables, investigate the relationships between  runs and each of the other five traditional variables. Which variable best predicts runs? Support your conclusion using the graphical and numerical methods we've discussed (for the sake of conciseness, only include output for the best variable, not all five).
+</div>
+
+```{r}
+lm(runs ~ bat_avg, data = mlb11) %>%
+  summary()
+
+plot(mlb11$runs ~ mlb11$bat_avg)
+abline(lm(runs ~ bat_avg, data = mlb11))
+```
+
+<div class='alert alert-info'>
+Batting Average has the strongest $R^2$ with 0.6438.
+</div>
+
+<div class='well'>
+  #4: Now examine the three newer variables. These are the statistics used by the author of Moneyball to predict a teams success. In general, are they more or less effective at predicting runs that the old variables? Explain using appropriate graphical and numerical evidence. Of all ten variables we've analyzed, which seems to be the best predictor of runs? Using the limited (or not so limited) information you know about these baseball statistics, does your result make sense?
+</div>
+
+```{r}
+lm(runs ~ new_onbase, data = mlb11) %>%
+  summary()
+
+lm(runs ~ new_slug, data = mlb11) %>%
+  summary()
+
+m2 <- lm(runs ~ new_obs, data = mlb11) %T>%
+  summary()
+
+plot(mlb11$runs ~ mlb11$new_obs)
+abline(lm(runs ~ new_obs, data = mlb11))
+```
+
+<div class='alert alert-info'>
+The $R^2$ for new_onbase, new_slug and new_obs is 0.8437, 0.8932, and 0.9326 respectively. The best predictor across all 10 statistics is new_obs or on-base plus slugging. This result makes sense. While the old statistics measured singular aspects of a baseball team's offense (more at bats mean more batters on getting on base and thus scoring runs, more homeruns means more runs) the new statistics do a better job of summarizing this data. In order to score a run, you must get on base and slugging measures how successful a team is at moving those players once they get on base. Getting players on base and successfully advancing them are the two essential skills needed to score more runs.
+</div>
+
+<div class='well'>
+  #5: Check the model diagnostics for the regression model with the variable you decided was the best predictor for runs.
+</div>
+
+```{r}
+plot(m2$residuals ~ mlb11$new_obs)
+abline(h = 0, lty = 3)
+
+qqnorm(m2$residuals)
+qqline(m2$residuals) 
+```
+
+<div class='alert alert-info'>
+There is no pattern to the residuals. The residuals are roughly normal in distribution. The original plot shows a near constant level of variability. Thus, the conditions for inference have been met.
+</div>
