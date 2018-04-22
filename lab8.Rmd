@@ -1,0 +1,289 @@
+---
+output: 
+  html_document:
+    css: custom.css
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, message=FALSE, warning=FALSE)
+load('C:\\Users\\Brian\\Desktop\\GradClasses\\Spring18\\606\\Labs\\mlb11.RData')
+library(tidyverse)
+library(magrittr)
+library(knitr)
+load('evals.RData')
+```
+
+<div class='jumbotron'>
+  <h2 class='display-3 text-uppercase'>Lab 8 - Multiple Linear Regression</h2>
+  <h4 class='right text-uppercase'>By Brian Weinfeld</h4>
+  <div class='clearfix'></div>
+  <h5 class='right text-uppercase'>April 22nd, 2018</h5>
+</div>
+
+<div class='page-header text-uppercase'>
+  <h3>Exercises</h3>
+</div>
+
+<div class='well'>
+  #1: Is this an observational study or an experiment? The original research question posed in the paper is whether beauty leads directly to the differences in course evaluations. Given the study design, is it possible to answer this question as it is phrased? If not, rephrase the question.
+</div>
+
+<div class='alert alert-info'>
+This is an observational study. The ratings given by students for each teacher do not follow experimental design. As such, it is impossible to answer this question with 100% certain as there will be other variables that cannot be controlled for. I would rephrase the question: Is there evidence to suggest that beauty plays a role in teacher evaulations?
+</div>
+
+<div class='well'>
+  #2: Describe the distribution of score. Is the distribution skewed? What does that tell you about how students rate courses? Is this what you expected to see? Why, or why not?
+</div>
+
+```{r}
+summary(evals$score)
+
+ggplot(evals) +
+  geom_bar(aes(score))
+```
+
+<div class='alert alert-info'>
+The data is heavily skewed. This tells me that most students are satisfied with the quality of the courses and professors that they take. Nearly 100% of teachers are "above average". I'm not sure what I expected from the results. It does suggest that the ratings may not be helpful though. Perhaps a new system is needed for this reason alone.
+</div>
+
+<div class='well'>
+  #3: Excluding score, select two other variables and describe their relationship using an appropriate visualization (scatterplot, side-by-side boxplots, or mosaic plot).
+</div>
+
+```{r}
+ggplot(evals, aes(cls_students, cls_did_eval)) +
+  geom_point() +
+  geom_smooth(method='lm', se=FALSE) +
+  coord_equal(ratio=1)
+
+lm(cls_did_eval ~ cls_students, data=evals)
+
+cor(evals$cls_did_eval, evals$cls_students)
+```
+
+<div class='alert alert-info'>
+I selected `cls_did_eval` (students who did the evaluation) and `cls_students` (students in class). There is a strong positive correlation between the number of students in the class and the number of students who responded to the survey. About 58% of students respond to the surveys.
+</div>
+
+<div class='well'>
+  #4: Replot the scatterplot, but this time use the function jitter() on the y- or the x-coordinate. (Use ?jitter to learn more.) What was misleading about the initial scatterplot?
+</div>
+
+```{r}
+ggplot(evals, aes(bty_avg, score)) +
+  geom_jitter()
+```
+
+<div class='alert alert-info'>
+The initial plot had many points plotted on top of one another. The jittered pointed do a better job of showing clusters of points.
+</div>
+
+<div class='well'>
+  #5: Let's see if the apparent trend in the plot is something more than natural variation. Fit a linear model called m_bty to predict average professor score by average beauty rating and add the line to your plot using abline(m_bty). Write out the equation for the linear model and interpret the slope. Is average beauty score a statistically significant predictor? Does it appear to be a practically significant predictor?
+</div>
+
+```{r}
+m_bty <- lm(score ~ bty_avg, data=evals)
+m_bty
+
+summary(m_bty)
+
+ggplot(evals, aes(bty_avg, score)) +
+  geom_jitter() + 
+  geom_smooth(se=FALSE, method='lm')
+```
+
+<div class='alert alert-info'>
+The lm equation is $\widehat{score}=0.06664\times beauty+3.88034$ The slope indicates that for each increase in beauty average by 1 point, a teacher can expected an increase of 0.06664 points on their evaluations average. The p-value on the slope is suitably small. This provides strong evidence of a relationship between the two variables. However, the small $R^2_{adj}$ value of 0.03293 indicates that beauty only explains a small portion of the variable in scores.
+</div>
+
+<div class='well'>
+  #6: Use residual plots to evaluate whether the conditions of least squares regression are reasonable. Provide plots and comments for each one (see the Simple Regression Lab for a reminder of how to make these).
+</div>
+
+```{r}
+ggplot(evals) +
+  geom_point(aes(bty_avg, m_bty$residuals)) +
+  geom_hline(yintercept=0, color='red')
+
+ggplot() +
+  geom_histogram(aes(m_bty$residuals), bins=10)
+```
+
+<div class='alert alert-info'>
+ The residual plot shows no pattern and consistent variability. The histogram of the residuals shows a skew.
+</div>
+
+<div class='well'>
+  #7: P-values and parameter estimates should only be trusted if the conditions for the regression are reasonable. Verify that the conditions for this model are reasonable using diagnostic plots.
+</div>
+
+```{r}
+m_bty_gen <- lm(score ~ bty_avg + gender, data = evals)
+summary(m_bty_gen)
+
+#Linearity of residuals
+ggplot(evals) +
+  geom_point(aes(bty_avg, m_bty_gen$residuals)) +
+  geom_hline(yintercept=0, color='red')
+
+
+#Independence of residuals
+ggplot() +
+  geom_point(aes(1:463, m_bty_gen$residuals))
+
+
+#Normal distribution of residuals
+ggplot() +
+  geom_histogram(aes(m_bty_gen$residuals), bins=20)
+
+#Equal variance of residuals 
+ggplot() +
+  geom_point(aes(m_bty_gen$fitted.values, abs(m_bty_gen$residuals)))
+```
+
+<div class='alert alert-info'>
+The conditions for regression are met and the p-value may be trusted.
+</div>
+
+<div class='well'>
+  #8: Is bty_avg still a significant predictor of score? Has the addition of gender to the model changed the parameter estimate for bty_avg?
+</div>
+
+<div class='alert alert-info'>
+`bty_avg` is still a significant factor in score. The addition of `gender` has changed the size of its effect.
+</div>
+
+<div class='well'>
+  #9: What is the equation of the line corresponding to males? (Hint: For males, the parameter estimate is multiplied by 1.) For two professors who received the same beauty rating, which gender tends to have the higher course evaluation score?
+</div>
+
+<div class='alert alert-info'>
+The line corresponding to males is the blue line. Men tend to have a higher rating than Female of equal beauty. The size of this effect is calculated to be 0.17239 points.
+</div>
+
+<div class='well'>
+  #10: Create a new model called m_bty_rank with gender removed and rank added in. How does R appear to handle categorical variables that have more than two levels? Note that the rank variable has three levels: teaching, tenure track, tenured.
+</div>
+
+```{r}
+m_bty_rank <- lm(score ~ bty_avg + rank, data = evals)
+summary(m_bty_rank)
+```
+
+<div class='alert alert-info'>
+The regression spreads the data over 2 columns, putting a 1 in the "tenure track" column or "tenured" column when appropriate. If both are 0, then the teacher is in the "teaching".
+</div>
+
+<div class='well'>
+  #11: Which variable would you expect to have the highest p-value in this model? Why? Hint: Think about which variable would you expect to not have any association with the professor score.
+</div>
+
+<div class='alert alert-info'>
+ If I had to guess I would select "cls_profs". The number of professors in the class shouldn't effect a student's ranking because they are evaluating each professor separately.
+</div>
+
+<div class='well'>
+  #12: Check your suspicions from the previous exercise. Include the model output in your response.
+</div>
+
+```{r}
+m_full <- lm(score ~ rank + ethnicity + gender + language + age + cls_perc_eval 
+             + cls_students + cls_level + cls_profs + cls_credits + bty_avg 
+             + pic_outfit + pic_color, data = evals)
+summary(m_full)
+```
+
+<div class='alert alert-info'>
+With a p-value of 0.77806, `cls_prof` is the least significant.
+</div>
+
+<div class='well'>
+  #13: Interpret the coefficient associated with the ethnicity variable.
+</div>
+
+<div class='alert alert-info'>
+If the coefficient is 0 that means the professor is is a minority while if it is a 1 that means the professor is not a minority. Teachers that are not minorities generally have slightly higher scores than those who are minorities.
+</div>
+
+<div class='well'>
+  #14: Drop the variable with the highest p-value and re-fit the model. Did the coefficients and significance of the other explanatory variables change? (One of the things that makes multiple regression interesting is that coefficient estimates depend on the other variables that are included in the model.) If not, what does this say about whether or not the dropped variable was collinear with the other explanatory variables?
+</div>
+
+```{r}
+m_full <- lm(score ~ rank + ethnicity + gender + language + age + cls_perc_eval 
+             + cls_students + cls_level + cls_credits + bty_avg 
+             + pic_outfit + pic_color, data = evals)
+summary(m_full)
+```
+
+<div class='alert alert-info'>
+I dropped `cls_profs` and reran the regression. The coefficients and significance of the other variables changed, although some more than others.
+</div>
+
+<div class='well'>
+  #15: Using backward-selection and p-value as the selection criterion, determine the best model. You do not need to show all steps in your answer, just the output for the final model. Also, write out the linear model for predicting score based on the final model you settle on.
+</div>
+
+```{r}
+m_full <- lm(score ~ rank + ethnicity + gender + language + age + cls_perc_eval + 
+               cls_students + cls_level + cls_credits + bty_avg + pic_outfit  +
+               pic_color, data = evals)
+summary(m_full)
+```
+
+<div class='alert alert-info'>
+Removing `cls_profs` is the only category that can be removed from the regression. I attempted to remove each other category but all of them lead to a fall in the adjusted $R^2$.
+</div>
+
+<div class='well'>
+  #16: Verify that the conditions for this model are reasonable using diagnostic plots.
+</div>
+
+```{r}
+#Linearity of residuals
+ggplot(evals) +
+  geom_point(aes(bty_avg, m_full$residuals)) +
+  geom_hline(yintercept=0, color='red')
+
+#Independence of residuals
+ggplot() +
+  geom_point(aes(1:463, m_full$residuals))
+
+#Normal distribution of residuals
+ggplot() +
+  geom_histogram(aes(m_full$residuals), bins=20)
+
+#Equal variance of residuals 
+ggplot() +
+  geom_point(aes(m_full$fitted.values, abs(m_full$residuals)))
+```
+
+<div class='alert alert-info'>
+ The above graphs show that all conditions for inference have been met.
+</div>
+
+<div class='well'>
+  #17: The original paper describes how these data were gathered by taking a sample of professors from the University of Texas at Austin and including all courses that they have taught. Considering that each row represents a course, could this new information have an impact on any of the conditions of linear regression?
+</div>
+
+<div class='alert alert-info'>
+Yes. A professor that teaches more courses will be represented more times in the study and have undue weight on the overall answers. 
+</div>
+
+<div class='well'>
+  #18: Based on your final model, describe the characteristics of a professor and course at University of Texas at Austin that would be associated with a high evaluation score.
+</div>
+
+<div class='alert alert-info'>
+According to our model a high scoring professor would be, in no particular order: neither tenured or on tenure track, not a minority, male, speaks english, is young, teaching upper level courses worth one credit and is physically attractive.
+</div>
+
+<div class='well'>
+  #19: Would you be comfortable generalizing your conclusions to apply to professors generally (at any university)? Why or why not?
+</div>
+
+<div class='alert alert-info'>
+It seems reasonable to generalize this study to other schools in the United States. I would be wary about straying too far away to places with different cultural norms. 
+</div>
